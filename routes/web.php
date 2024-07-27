@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StationController;
+use App\Models\Route as RouteModel;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -10,6 +12,15 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/routes/{route}', function (RouteModel $route) {
+    return view('routes', ['route' => $route]);
+})->name('routes.show');
+
+Route::resource('stations', StationController::class)
+    ->missing(fn () => redirect()->action('stations.index'))
+    ->middleware(['auth', 'verified'])
+    ->only('index', 'show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
