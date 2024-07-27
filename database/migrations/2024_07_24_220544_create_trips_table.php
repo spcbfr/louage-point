@@ -18,6 +18,10 @@ return new class extends Migration
             $table->foreignIdFor(Route::class);
             $table->foreignIdFor(User::class);
             $table->integer('fare');
+            $table->integer('wait_time')->nullable();
+            $table->integer('group_size')->default(1);
+            $table->timestamp('departured_at')->nullable();
+            $table->text('review')->nullable();
             $table->timestamps();
         });
     }

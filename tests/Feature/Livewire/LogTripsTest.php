@@ -7,18 +7,18 @@ use App\Models\Trip;
 use App\Models\User;
 use Livewire\Livewire;
 
-it('renders successfully', function () {
-    Livewire::test(LogTrips::class)
-        ->assertStatus(200);
-});
-it('creates trip with new route if it doesn\'t already exist', function () {
-    $user = User::factory()->create();
+beforeEach(function () {
+    $this->user = User::factory()->create();
     Station::factory(3)->create();
-    Livewire::actingAs($user)
+});
+
+it('creates trip with new route if it doesn\'t already exist', function () {
+
+    Livewire::actingAs($this->user)
         ->test(LogTrips::class)
         ->fillForm([
-            'from' => 1,
-            'to' => 2,
+            'from_id' => 1,
+            'to_id' => 2,
             'fare' => 20,
         ])
         ->call('create');
@@ -29,7 +29,7 @@ it('creates trip with new route if it doesn\'t already exist', function () {
         ->sole();
 
     $trip = Trip::query()
-        ->where('user_id', $user->id)
+        ->where('user_id', $this->user->id)
         ->where('route_id', $route->id)
         ->first();
 
@@ -38,18 +38,16 @@ it('creates trip with new route if it doesn\'t already exist', function () {
 });
 
 it('creates trip with existing route if it already exist', function () {
-    $user = User::factory()->create();
-    Station::factory(3)->create();
 
     $route = new Route;
     $route->save();
     $route->stations()->sync([1, 2]);
 
-    Livewire::actingAs($user)
+    Livewire::actingAs($this->user)
         ->test(LogTrips::class)
         ->fillForm([
-            'from' => 1,
-            'to' => 2,
+            'from_id' => 1,
+            'to_id' => 2,
             'fare' => 20,
         ])
         ->call('create');
@@ -65,10 +63,46 @@ it('creates trip with existing route if it already exist', function () {
         ->toBe($route->id);
 
     $trip = Trip::query()
-        ->where('user_id', $user->id)
+        ->where('user_id', $this->user->id)
         ->where('route_id', $route->id)
         ->first();
 
     expect($trip->fare)
         ->toBe(20);
+});
+
+it('rejects back-to-back trips on the same route', function () {
+    $route = new Route;
+    $route->save();
+    $route->stations()->sync([1, 2]);
+
+    Livewire::actingAs($this->user)
+        ->test(LogTrips::class)
+        ->fillForm([
+            'from_id' => 1,
+            'to_id' => 2,
+            'fare' => 20,
+        ])
+        ->call('create')
+        ->assertHasNoErrors();
+
+    Livewire::actingAs($this->user)
+        ->test(LogTrips::class)
+        ->fillForm([
+            'from_id' => 1,
+            'to_id' => 3,
+            'fare' => 20,
+        ])
+        ->call('create')
+        ->assertHasNoErrors();
+
+    Livewire::actingAs($this->user)
+        ->test(LogTrips::class)
+        ->fillForm([
+            'from_id' => 1,
+            'to_id' => 2,
+            'fare' => 15,
+        ])
+        ->call('create')
+        ->assertHasErrors();
 });
