@@ -13,6 +13,16 @@ class Route extends Model
 
     protected $guarded = ['id'];
 
+    public function getNameAttribute()
+    {
+        return $this->stations->pluck('name')->implode('-');
+    }
+
+    public function getCalculatedWaitTimeAttribute()
+    {
+        return $this->trips->avg('wait_time');
+    }
+
     public function scopeOfStations($query, array $nodes)
     {
         //  WARNING: do not replace the multiple whereHas clauses generated below

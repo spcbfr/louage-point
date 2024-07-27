@@ -13,6 +13,8 @@ class Trip extends Model
 
     protected $guarded = ['id'];
 
+    protected $fillable = ['wait_time', 'departured_at', 'group_size', 'fare', 'review'];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -26,5 +28,6 @@ class Trip extends Model
     protected $casts = [
         // the trip fare is stored as an intger to make floating point calculations easier.
         'fare' => Money::class,
+        'departured_at' => 'datetime',
     ];
 }
